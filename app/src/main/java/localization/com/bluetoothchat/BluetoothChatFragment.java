@@ -22,6 +22,8 @@ import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,6 +43,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import localization.com.bt_fp.R;
 import localization.com.common.logger.Log;
@@ -71,7 +77,11 @@ public class BluetoothChatFragment extends Fragment {
     /**
      * Array adapter for the conversation thread
      */
-    private ArrayAdapter<String> mConversationArrayAdapter;
+   // private ArrayAdapter<String> mConversationArrayAdapter;
+
+    private ChatAdapter mConversationArrayAdapter;
+    ArrayList<Bitmap> mBitmaps;
+
 
     /**
      * String buffer for outgoing messages
@@ -94,13 +104,14 @@ public class BluetoothChatFragment extends Fragment {
         setHasOptionsMenu(true);
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        FingerprintHandler.setMlAuthListner(new FPListner());
+      //  FingerprintHandler.setMlAuthListner(new FPListner());
         // If the adapter is null, then Bluetooth is not supported
         if (mBluetoothAdapter == null) {
             getActivity();
             Toast.makeText(getActivity(), "Bluetooth is not available", Toast.LENGTH_LONG).show();
             getActivity().finish();
         }
+        mBitmaps = new ArrayList<>();
     }
 
 
@@ -162,8 +173,8 @@ public class BluetoothChatFragment extends Fragment {
         Log.d(TAG, "setupChat()");
 
         // Initialize the array adapter for the conversation thread
-        mConversationArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.message);
-
+      //  mConversationArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.message);
+        mConversationArrayAdapter = new ChatAdapter(mBitmaps,getActivity());
         mConversationView.setAdapter(mConversationArrayAdapter);
 
         // Initialize the compose field with a listener for the return key
@@ -217,8 +228,8 @@ public class BluetoothChatFragment extends Fragment {
         if (message.length() > 0) {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
-            mChatService.write(send);
-
+           // mChatService.write(send);
+sendMessage();
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
             mOutEditText.setText(mOutStringBuffer);
@@ -286,7 +297,7 @@ public class BluetoothChatFragment extends Fragment {
                     switch (msg.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
                             setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                            mConversationArrayAdapter.clear();
+                           // mConversationArrayAdapter.clear();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
                             setStatus(R.string.title_connecting);
@@ -299,15 +310,23 @@ public class BluetoothChatFragment extends Fragment {
                     break;
                 case Constants.MESSAGE_WRITE:
                     byte[] writeBuf = (byte[]) msg.obj;
+
+                    Bitmap bmp = BitmapFactory.decodeByteArray(writeBuf, 0, writeBuf.length);
+                   // imageview.setImageBitmap(bmp);
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
-                    mConversationArrayAdapter.add("Me:  " + writeMessage);
+                    mBitmaps.add(bmp);
+                    mConversationArrayAdapter.notifyDataSetChanged();
+                  //  mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
-                    mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                    Bitmap bmp2 = BitmapFactory.decodeByteArray(readBuf, 0, readBuf.length);
+                    // imageview.setImageBitmap(bmp);
+                    // construct a string from the buffer
+                    String writeMessage2 = new String(readBuf);
+                    mBitmaps.add(bmp2);
+                    mConversationArrayAdapter.notifyDataSetChanged();
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -408,5 +427,17 @@ public class BluetoothChatFragment extends Fragment {
         public void onSucess(String text) {
 sendMessage(text);
         }
+    }
+
+
+    public void sendMessage()
+    {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Bitmap bm = BitmapFactory.decodeResource(getResources(),R.drawable.creative);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100,baos); //bm is the bitmap object
+        byte[] b = baos.toByteArray();
+        Toast.makeText(getActivity(), String.valueOf(b.length), Toast.LENGTH_SHORT).show();
+        mChatService.write(b);
     }
 }
