@@ -25,9 +25,11 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.fingerprint.FingerprintManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -40,16 +42,21 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import localization.com.bt_fp.R;
 import localization.com.common.logger.Log;
+
+import static android.app.Activity.RESULT_OK;
 
 
 /**
@@ -153,6 +160,9 @@ public class BluetoothChatFragment extends Fragment {
         }
     }
 
+    ImageView img;
+    Button camera;
+
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -164,6 +174,16 @@ public class BluetoothChatFragment extends Fragment {
         mConversationView = (ListView) view.findViewById(R.id.in);
         mOutEditText = (EditText) view.findViewById(R.id.edit_text_out);
         mSendButton = (Button) view.findViewById(R.id.button_send);
+        camera = (Button)view.findViewById(R.id.button_camera);
+        img = (ImageView)view.findViewById(R.id.imageView);
+
+        camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(takePicture, 8);
+            }
+        });
     }
 
     /**
@@ -184,12 +204,16 @@ public class BluetoothChatFragment extends Fragment {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Send a message using content of the edit text widget
-                View view = getView();
+                /*View view = getView();
                 if (null != view) {
                     TextView textView = (TextView) view.findViewById(R.id.edit_text_out);
                     String message = textView.getText().toString();
                     sendMessage(message);
-                }
+                }*/
+
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto , 22);
             }
         });
 
@@ -229,12 +253,14 @@ public class BluetoothChatFragment extends Fragment {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
            // mChatService.write(send);
-sendMessage();
+
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
             mOutEditText.setText(mOutStringBuffer);
         }
     }
+
+
 
     /**
      * The action listener for the EditText widget, to listen for the return key
@@ -345,24 +371,63 @@ sendMessage();
             }
         }
     };
+    public byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 8192;
+        byte[] buffer = new byte[bufferSize];
 
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
+    }
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_CONNECT_DEVICE_SECURE:
                 // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     connectDevice(data, true);
                 }
                 break;
             case REQUEST_CONNECT_DEVICE_INSECURE:
                 // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     connectDevice(data, false);
+                }
+                break;
+            case 22:
+                // When DeviceListActivity returns with a device to connect
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = data.getData();
+                    InputStream iStream = null;
+                    try {
+                        iStream = getActivity().getContentResolver().openInputStream(selectedImage);
+                        byte[] inputData = getBytes(iStream);
+                        mChatService.write(inputData);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            case 8:
+                // When DeviceListActivity returns with a device to connect
+                if(resultCode == RESULT_OK){
+                    Bitmap photo = (Bitmap) data.getExtras().get("data");
+                    img.setImageBitmap(photo);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    if(photo!=null) {
+                        photo.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        byte[] byteArray = stream.toByteArray();
+                        mChatService.write(byteArray);
+                    }
                 }
                 break;
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     // Bluetooth is now enabled, so set up a chat session
                     setupChat();
                 } else {
@@ -430,14 +495,5 @@ sendMessage(text);
     }
 
 
-    public void sendMessage()
-    {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Bitmap bm = BitmapFactory.decodeResource(getResources(),R.drawable.creative);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.JPEG, 100,baos); //bm is the bitmap object
-        byte[] b = baos.toByteArray();
-        Toast.makeText(getActivity(), String.valueOf(b.length), Toast.LENGTH_SHORT).show();
-        mChatService.write(b);
-    }
+
 }

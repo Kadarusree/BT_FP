@@ -21,11 +21,20 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -486,11 +495,13 @@ public class BluetoothChatService {
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];
-            int bytes;
+            int bytesRead=0;
+            int current = 0;
 
             // Keep listening to the InputStream while connected
             while (mState == STATE_CONNECTED) {
-                try {
+
+               /* try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
 
@@ -501,7 +512,33 @@ public class BluetoothChatService {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
                     break;
+                }*/
+
+
+                BufferedInputStream    bufferedInputStream = new BufferedInputStream(mmInStream);
+                Bitmap bmp =  BitmapFactory.decodeStream(bufferedInputStream);
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                if(bmp!=null){
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, byteArray)
+                            .sendToTarget();
+
+                    try (FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()+
+                            "/"+ System.currentTimeMillis()+".jpg")) {
+                        bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+                        // PNG is a lossless format, the compression factor (100) is ignored
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+                try {
+                    bufferedInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         }
 
@@ -513,13 +550,44 @@ public class BluetoothChatService {
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception during write", e);
+            }
+            /*try {
+             //   mmOutStream.write(buffer);
+                File myFile = new File(Environment.getExternalStorageDirectory()
+                        + "/temp_photo.jpg");
+
+                byte[] mybytearray = new byte[(int)myFile.length()];
+                Log.d(TAG,"file length() =" + (int)myFile.length());
+
+                FileInputStream fis = new FileInputStream(myFile);
+                Log.d(TAG,"fis created");
+
+                BufferedInputStream bis = new BufferedInputStream(fis,1272254 );
+                Log.d(TAG,"bis created success");
+
+                bis.read(mybytearray,0,mybytearray.length);
+                Log.d(TAG,"ALL Bytes read from bis");
+
+
+
+
+                mmOutStream.write(mybytearray, 0, mybytearray.length);
+                Log.d(TAG,"BYTES WRITTEN to OUTSTREAM of socket");
+
+
+                mmOutStream.flush();
+                Log.d(TAG,"bytes flushed");
+                mmOutStream.close();
 
                 // Share the sent message back to the UI Activity
-                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
+                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, mybytearray)
                         .sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write", e);
-            }
+            }*/
         }
 
         public void cancel() {

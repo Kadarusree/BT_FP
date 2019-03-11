@@ -19,6 +19,12 @@
               android:layout_height="match_parent"
               android:orientation="vertical" >
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:src="@mipmap/ic_launcher"
+        android:id="@+id/imageView"/>
+
     <ListView
         android:id="@+id/in"
         android:layout_width="match_parent"
@@ -31,7 +37,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
-
+        <Button
+            android:id="@+id/button_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camera" />
         <EditText
             android:id="@+id/edit_text_out"
             android:layout_width="wrap_content"
@@ -43,7 +53,7 @@
             android:id="@+id/button_send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send" />
+            android:text="Gallery" />
     </LinearLayout>
 
 </LinearLayout>
