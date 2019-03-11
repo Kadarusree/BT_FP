@@ -520,14 +520,14 @@ public class BluetoothChatService {
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 if(bmp!=null){
-                    bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] byteArray = stream.toByteArray();
                     mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, byteArray)
                             .sendToTarget();
 
                     try (FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()+
                             "/"+ System.currentTimeMillis()+".jpg")) {
-                        bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
                         // PNG is a lossless format, the compression factor (100) is ignored
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -550,6 +550,8 @@ public class BluetoothChatService {
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
+                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
+                        .sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Exception during write", e);
