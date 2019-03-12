@@ -25,16 +25,23 @@ import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v4.app.ActivityCompat;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.CompoundButton;
+import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewAnimator;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -83,6 +90,12 @@ public class MainActivity extends SampleActivityBase {
     private TextView textView;
 
 
+    RadioButton test, train;
+    Spinner users;
+
+    String storagePath, testpath, trainpath;
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -95,6 +108,101 @@ public class MainActivity extends SampleActivityBase {
         setContentView(R.layout.activity_main);
     //    intitFP()    ;
 
+        storagePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/FaceRec";
+
+        File f=new File(storagePath);
+        if(!f.exists()){
+           f.mkdir();
+        }
+
+        test = (RadioButton)findViewById(R.id.rb_test);
+        train = (RadioButton)findViewById(R.id.rb_train);
+        users = (Spinner)findViewById(R.id.spn_users);
+
+
+        test.setChecked(true);
+
+        File ftest = new File(storagePath+"/Test");
+        if(!ftest.exists()){
+            ftest.mkdir();
+            Utils.storagePath = ftest.getAbsolutePath();
+        }
+        else {
+            Utils.storagePath = ftest.getAbsolutePath();
+        }
+
+        test.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    train.setChecked(false);
+                    ;
+                    File f = new File(storagePath+"/Test");
+                    if(!f.exists()){
+                        f.mkdir();
+                        Utils.storagePath = f.getAbsolutePath();
+                    }
+                    else {
+                        Utils.storagePath = f.getAbsolutePath();
+                    }
+
+                }
+            }
+        });
+        train.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    test.setChecked(false);
+                    File f = new File(storagePath+"/Train");
+                    if(!f.exists()){
+
+                        if (f.mkdir()){
+                            trainpath = f.getAbsolutePath();
+                            File userpath = new File(trainpath+"/"+getResources().getStringArray(R.array.users)[users.getSelectedItemPosition()]);
+                            if (!userpath.exists()){
+                                if(userpath.mkdir()){
+                                    Utils.storagePath = userpath.getAbsolutePath();
+                                }
+                            }
+                            else {
+                                Utils.storagePath = userpath.getAbsolutePath();
+                            }
+                        }
+
+                    }
+                    else{
+                        trainpath = f.getAbsolutePath();
+                        users.setSelection(0);
+
+                    }
+                }
+            }
+        });
+
+        users.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                if (train.isChecked()){
+                    File f = new File(trainpath+"/"+getResources().getStringArray(R.array.users)[position]);
+                    if(!f.exists()){
+                        f.mkdir();
+                        Utils.storagePath = f.getAbsolutePath();
+                    }
+                    else{
+                        Utils.storagePath = f.getAbsolutePath();
+                    }
+                }
+
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -114,9 +222,7 @@ public class MainActivity extends SampleActivityBase {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem logToggle = menu.findItem(R.id.menu_toggle_log);
-        logToggle.setVisible(findViewById(R.id.sample_output) instanceof ViewAnimator);
-        logToggle.setTitle(mLogShown ? R.string.sample_hide_log : R.string.sample_show_log);
+
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -126,13 +232,6 @@ public class MainActivity extends SampleActivityBase {
         switch(item.getItemId()) {
             case R.id.menu_toggle_log:
                 mLogShown = !mLogShown;
-                ViewAnimator output = (ViewAnimator) findViewById(R.id.sample_output);
-                if (mLogShown) {
-                    output.setDisplayedChild(1);
-                } else {
-                    output.setDisplayedChild(0);
-                }
-                //supportInvalidateOptionsMenu();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -270,6 +369,19 @@ public void intitFP(){
                 }
             }
         }
+    }
+}
+
+public void getTrainpath(){
+    String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+"Train";
+    File f = new File(path);
+    if (f.exists()){
+        trainpath = f.getAbsolutePath();
+    }
+    else {
+        f.mkdir();
+
+        f.mkdirs();
     }
 }
 

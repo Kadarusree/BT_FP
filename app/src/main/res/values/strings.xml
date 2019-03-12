@@ -47,4 +47,11 @@
     <string name="activity_home_desc">You have successfully logged in with fingerprint authentication</string>
     <string name="activity_home_note">Close and re-open the app to see the fingerprint auth screen again</string>
 
+    <array name="users">
+        <item>User1</item>
+        <item>User2</item>
+        <item>User3</item>
+
+    </array>
+
 </resources>

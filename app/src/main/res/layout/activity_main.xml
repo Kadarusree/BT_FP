@@ -20,28 +20,48 @@
       android:layout_height="match_parent"
       android:id="@+id/sample_main_layout">
 
-    <ViewAnimator
-          android:id="@+id/sample_output"
-          android:layout_width="match_parent"
-          android:layout_height="0px"
-          android:layout_weight="1">
-
-        <ScrollView
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
-
-            <TextView
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  />
-        </ScrollView>
-
-        <FrameLayout
-              android:id="@+id/log_fragment"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent" />
-
-    </ViewAnimator>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="0.2"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5">
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:text="TEST"
+            android:id="@+id/rb_test"/>
+        <RadioButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:text="TRAIN"
+            android:id="@+id/rb_train"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:text="Select User"
+            android:gravity="center"/>
+        <Spinner
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:text="Select User"
+            android:entries="@array/users"
+            android:gravity="left|center"
+            android:id="@+id/spn_users"/>
+    </LinearLayout>
+</LinearLayout>
 
     <View
           android:layout_width="match_parent"
@@ -50,7 +70,7 @@
 
     <FrameLayout
           android:id="@+id/sample_content_fragment"
-          android:layout_weight="2"
+          android:layout_weight="0.8"
           android:layout_width="match_parent"
           android:layout_height="0px" />
 

@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.widget.Toast;
 
 
 import java.io.BufferedInputStream;
@@ -525,7 +526,7 @@ public class BluetoothChatService {
                     mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, byteArray)
                             .sendToTarget();
 
-                    try (FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()+
+                    try (FileOutputStream out = new FileOutputStream(Utils.storagePath+
                             "/"+ System.currentTimeMillis()+".jpg")) {
                         bmp.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
                         // PNG is a lossless format, the compression factor (100) is ignored
@@ -533,12 +534,12 @@ public class BluetoothChatService {
                         e.printStackTrace();
                     }
                 }
-                try {
+              /*  try {
                     bufferedInputStream.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
+*/
             }
         }
 
@@ -552,6 +553,7 @@ public class BluetoothChatService {
                 mmOutStream.write(buffer);
                 mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
+                Log.d(TAG,"Image Sent");
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Exception during write", e);
@@ -595,6 +597,8 @@ public class BluetoothChatService {
         public void cancel() {
             try {
                 mmSocket.close();
+                Log.d(TAG,"S");
+
             } catch (IOException e) {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
