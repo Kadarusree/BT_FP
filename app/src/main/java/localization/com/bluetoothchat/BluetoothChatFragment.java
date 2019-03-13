@@ -24,7 +24,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.hardware.fingerprint.FingerprintManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,7 +38,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -47,10 +45,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 import localization.com.bt_fp.R;
@@ -347,6 +348,18 @@ public class BluetoothChatFragment extends Fragment {
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
+
+
+                    try {
+                        Model mmm = (Model) toObject(readBuf);
+
+                        System.out.println(mmm.path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+
                     Bitmap bmp2 = BitmapFactory.decodeByteArray(readBuf, 0, readBuf.length);
                     // imageview.setImageBitmap(bmp);
                     // construct a string from the buffer
@@ -404,7 +417,7 @@ public class BluetoothChatFragment extends Fragment {
                     try {
                         iStream = getActivity().getContentResolver().openInputStream(selectedImage);
                         byte[] inputData = getBytes(iStream);
-                        mChatService.write(inputData);
+                    //    mChatService.write(inputData, byteArray);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
@@ -420,8 +433,21 @@ public class BluetoothChatFragment extends Fragment {
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     if(photo!=null) {
                         photo.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                        byte[] byteArray = stream.toByteArray();
-                        mChatService.write(byteArray);
+                        byte[] image = stream.toByteArray();
+
+                        Model m = new Model(image, Utils.storagePath);
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        ObjectOutputStream oos = null;
+                        try {
+                            oos = new ObjectOutputStream(bos);
+                            oos.writeObject(m);
+                            oos.flush();
+                            byte [] byteArray = bos.toByteArray();
+                            mChatService.write(image,byteArray);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 }
                 break;
@@ -495,5 +521,23 @@ sendMessage(text);
     }
 
 
+    public static Object toObject(byte[] bytes) throws IOException, ClassNotFoundException {
+        Object obj = null;
+        ByteArrayInputStream bis = null;
+        ObjectInputStream ois = null;
+        try {
+            bis = new ByteArrayInputStream(bytes);
+            ois = new ObjectInputStream(bis);
+            obj = ois.readObject();
+        } finally {
+            if (bis != null) {
+                bis.close();
+            }
+            if (ois != null) {
+                ois.close();
+            }
+        }
+        return obj;
+    }
 
 }

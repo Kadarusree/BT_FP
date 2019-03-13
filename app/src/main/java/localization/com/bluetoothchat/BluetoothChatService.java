@@ -24,20 +24,19 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
@@ -253,9 +252,10 @@ public class BluetoothChatService {
      * Write to the ConnectedThread in an unsynchronized manner
      *
      * @param out The bytes to write
-     * @see ConnectedThread#write(byte[])
+     * @param byteArray
+     * @see ConnectedThread#write(byte[], byte[])
      */
-    public void write(byte[] out) {
+    public void write(byte[] image, byte[] byteArray) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
@@ -264,7 +264,7 @@ public class BluetoothChatService {
             r = mConnectedThread;
         }
         // Perform the write unsynchronized
-        r.write(out);
+        r.write(image,byteArray);
     }
 
     /**
@@ -495,14 +495,16 @@ public class BluetoothChatService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[1024];
-            int bytesRead=0;
-            int current = 0;
+           byte[] buffer = new byte[1024];
+            int bytes=0;
 
             // Keep listening to the InputStream while connected
             while (mState == STATE_CONNECTED) {
 
-               /* try {
+
+
+
+               try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
 
@@ -513,7 +515,7 @@ public class BluetoothChatService {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
                     break;
-                }*/
+                }
 
 
                 BufferedInputStream    bufferedInputStream = new BufferedInputStream(mmInStream);
@@ -547,16 +549,22 @@ public class BluetoothChatService {
          * Write to the connected OutStream.
          *
          * @param buffer The bytes to write
+         * @param byteArray
          */
-        public void write(byte[] buffer) {
+        public void write(byte[] buffer, byte[] byteArray) {
             try {
-                mmOutStream.write(buffer);
+
+
+                mmOutStream.write(byteArray);
+             Model m = (Model) toObject(byteArray);
                 mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
                         .sendToTarget();
                 Log.d(TAG,"Image Sent");
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Exception during write", e);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
             /*try {
              //   mmOutStream.write(buffer);
@@ -603,5 +611,25 @@ public class BluetoothChatService {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
         }
+    }
+
+
+    public static Object toObject(byte[] bytes) throws IOException, ClassNotFoundException {
+        Object obj = null;
+        ByteArrayInputStream bis = null;
+        ObjectInputStream ois = null;
+        try {
+            bis = new ByteArrayInputStream(bytes);
+            ois = new ObjectInputStream(bis);
+            obj = ois.readObject();
+        } finally {
+            if (bis != null) {
+                bis.close();
+            }
+            if (ois != null) {
+                ois.close();
+            }
+        }
+        return obj;
     }
 }
