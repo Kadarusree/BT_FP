@@ -532,7 +532,6 @@ System.out.println(path);
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-                // create a DataInputStream so we can read data from it.
 
                 /*BufferedInputStream    bufferedInputStream = new BufferedInputStream(mmInStream);
                 Bitmap bmp =  BitmapFactory.decodeStream(bufferedInputStream);
