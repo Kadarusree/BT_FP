@@ -173,8 +173,16 @@ public class MainActivity extends SampleActivityBase {
                     }
                     else{
                         trainpath = f.getAbsolutePath();
-                        users.setSelection(0);
-
+                       // users.setSelection(0);
+                        File userpath = new File(trainpath+"/"+getResources().getStringArray(R.array.users)[users.getSelectedItemPosition()]);
+                        if (!userpath.exists()){
+                            if(userpath.mkdir()){
+                                Utils.storagePath = userpath.getAbsolutePath();
+                            }
+                        }
+                        else {
+                            Utils.storagePath = userpath.getAbsolutePath();
+                        }
                     }
                 }
             }
