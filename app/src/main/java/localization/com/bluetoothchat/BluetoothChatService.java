@@ -21,21 +21,11 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -255,9 +245,9 @@ public class BluetoothChatService {
      * Write to the ConnectedThread in an unsynchronized manner
      *
      * @param out The bytes to write
-     * @see ConnectedThread#write(byte[])
+     * @see ConnectedThread#write(Model)
      */
-    public void write(byte[] out) {
+    public void write(Model out) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
@@ -521,6 +511,7 @@ public class BluetoothChatService {
                     inputStream = mmSocket.getInputStream();
                     ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
                     Model m = (Model) objectInputStream.readObject();
+                    Utils.savepath = m.path;
 String path = m.path;
 
 System.out.println(path);
@@ -565,7 +556,7 @@ System.out.println(path);
          *
          * @param buffer The bytes to write
          */
-        public void write(byte[] buffer) {
+        public void write(Model buffer) {
            /* try {
                 mmOutStream.write(buffer);
                 mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
@@ -577,12 +568,11 @@ System.out.println(path);
             }*/
 
             try {
-                Model m = new Model(buffer,Utils.storagePath);
                 OutputStream outputStream = mmSocket.getOutputStream();
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-                objectOutputStream.writeObject(m);
+                objectOutputStream.writeObject(buffer);
 
-                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, m.image)
+                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer.image)
                         .sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();

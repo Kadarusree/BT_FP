@@ -6,4 +6,5 @@ package localization.com.bluetoothchat;
 
 public class Utils {
    public static String storagePath;
+    public static String savepath;
 }

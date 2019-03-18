@@ -49,6 +49,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -105,6 +106,9 @@ public class BluetoothChatFragment extends Fragment {
      */
     private BluetoothChatService mChatService = null;
 
+
+    ArrayList<Model> images;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +123,7 @@ public class BluetoothChatFragment extends Fragment {
             getActivity().finish();
         }
         mBitmaps = new ArrayList<>();
+        images = new ArrayList<>();
     }
 
 
@@ -161,7 +166,7 @@ public class BluetoothChatFragment extends Fragment {
     }
 
     ImageView img;
-    Button camera;
+    Button camera, send;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -173,8 +178,10 @@ public class BluetoothChatFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         mConversationView = (ListView) view.findViewById(R.id.in);
         mOutEditText = (EditText) view.findViewById(R.id.edit_text_out);
-        mSendButton = (Button) view.findViewById(R.id.button_send);
+        mSendButton = (Button) view.findViewById(R.id.button_gallery);
         camera = (Button)view.findViewById(R.id.button_camera);
+        img = (ImageView)view.findViewById(R.id.imageView);
+        send = (Button)view.findViewById(R.id.button_send);
         img = (ImageView)view.findViewById(R.id.imageView);
 
         camera.setOnClickListener(new View.OnClickListener() {
@@ -182,6 +189,24 @@ public class BluetoothChatFragment extends Fragment {
             public void onClick(View v) {
                 Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(takePicture, 8);
+            }
+        });
+
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (images.size()>0){
+                    for (int i=0;i<images.size();i++){
+                        mChatService.write(images.get(i));
+                    }
+                    Toast.makeText(getActivity(), images.size()+"Images Sent",Toast.LENGTH_LONG).show();
+                     images.clear();
+                }
+                else {
+                    Toast.makeText(getActivity(), "Please Select Images",Toast.LENGTH_LONG).show();
+
+                }
             }
         });
     }
@@ -353,6 +378,16 @@ public class BluetoothChatFragment extends Fragment {
                     String writeMessage2 = new String(readBuf);
                     mBitmaps.add(bmp2);
                     mConversationArrayAdapter.notifyDataSetChanged();
+
+
+                    try (FileOutputStream out = new FileOutputStream(Utils.savepath+
+                            "/"+ System.currentTimeMillis()+".jpg")) {
+                        bmp2.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
+                        // PNG is a lossless format, the compression factor (100) is ignored
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -404,7 +439,14 @@ public class BluetoothChatFragment extends Fragment {
                     try {
                         iStream = getActivity().getContentResolver().openInputStream(selectedImage);
                         byte[] inputData = getBytes(iStream);
-                        mChatService.write(inputData);
+
+                        Model m = new Model(inputData, Utils.storagePath);
+                        images.add(m);
+
+
+                        Toast.makeText(getActivity(), images.size()+" Images Selected",Toast.LENGTH_LONG).show();
+
+                       // mChatService.write(inputData);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
@@ -421,7 +463,12 @@ public class BluetoothChatFragment extends Fragment {
                     if(photo!=null) {
                         photo.compress(Bitmap.CompressFormat.PNG, 100, stream);
                         byte[] byteArray = stream.toByteArray();
-                        mChatService.write(byteArray);
+
+                        Model m = new Model(byteArray, Utils.storagePath);
+                        images.add(m);
+                        Toast.makeText(getActivity(), images.size()+" Images Selected",Toast.LENGTH_LONG).show();
+
+                     //   mChatService.write(byteArray);
                     }
                 }
                 break;

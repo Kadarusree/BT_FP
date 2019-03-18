@@ -51,6 +51,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -96,6 +97,9 @@ public class MainActivity extends SampleActivityBase {
     String storagePath, testpath, trainpath;
 
 
+    ArrayList<Model> images;
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -107,6 +111,9 @@ public class MainActivity extends SampleActivityBase {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     //    intitFP()    ;
+        createFolders();
+
+        images= new ArrayList<>();
 
         storagePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/FaceRec";
 
@@ -391,6 +398,57 @@ public void getTrainpath(){
 
         f.mkdirs();
     }
+}
+
+public void createFolders(){
+    String test = Environment.getExternalStorageDirectory()+"/FaceRec/Test";
+    String train = Environment.getExternalStorageDirectory()+"/FaceRec/Train";
+
+    File ftest = new File(test);
+    if(!ftest.exists()){
+        ftest.mkdir();
+    }
+    else {
+
+    }
+
+    File ftrain = new File(train);
+    if(!ftrain.exists()){
+        ftrain.mkdir();
+    }
+    else {
+
+    }
+
+    String user1= train+"/user1";
+    String user2= train+"/user2";
+    String user3= train+"/user3";
+
+    File fuser1 = new File(user1);
+    if(!fuser1.exists()){
+        fuser1.mkdir();
+    }
+    else {
+
+    }
+
+    File fuser2 = new File(user2);
+    if(!fuser2.exists()){
+        fuser2.mkdir();
+    }
+    else {
+
+    }
+
+
+    File fuser3 = new File(user3);
+    if(!fuser3.exists()){
+        fuser3.mkdir();
+    }
+    else {
+
+    }
+
 }
 
 }
