@@ -111,7 +111,7 @@ public class MainActivity extends SampleActivityBase {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     //    intitFP()    ;
-        createFolders();
+
 
         images= new ArrayList<>();
 
@@ -121,6 +121,10 @@ public class MainActivity extends SampleActivityBase {
         if(!f.exists()){
            f.mkdir();
         }
+
+
+        createFolders();
+
 
         test = (RadioButton)findViewById(R.id.rb_test);
         train = (RadioButton)findViewById(R.id.rb_train);

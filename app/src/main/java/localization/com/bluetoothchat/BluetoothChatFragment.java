@@ -380,13 +380,6 @@ public class BluetoothChatFragment extends Fragment {
                     mConversationArrayAdapter.notifyDataSetChanged();
 
 
-                    try (FileOutputStream out = new FileOutputStream(Utils.savepath+
-                            "/"+ System.currentTimeMillis()+".jpg")) {
-                        bmp2.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
-                        // PNG is a lossless format, the compression factor (100) is ignored
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
 
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
@@ -435,7 +428,25 @@ public class BluetoothChatFragment extends Fragment {
                 // When DeviceListActivity returns with a device to connect
                 if(resultCode == RESULT_OK){
                     Uri selectedImage = data.getData();
-                    InputStream iStream = null;
+                    img.setImageURI(selectedImage);
+
+                    try {
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), selectedImage);
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        if(bitmap!=null) {
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                            byte[] byteArray = stream.toByteArray();
+
+                            Model m = new Model(byteArray, Utils.storagePath);
+                            images.add(m);
+                            Toast.makeText(getActivity(), images.size()+" Images Selected",Toast.LENGTH_LONG).show();
+
+                            //   mChatService.write(byteArray);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    /*InputStream iStream = null;
                     try {
                         iStream = getActivity().getContentResolver().openInputStream(selectedImage);
                         byte[] inputData = getBytes(iStream);
@@ -451,7 +462,7 @@ public class BluetoothChatFragment extends Fragment {
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }
+                    }*/
                 }
                 break;
             case 8:

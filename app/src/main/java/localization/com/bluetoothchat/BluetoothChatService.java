@@ -21,11 +21,18 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -497,7 +504,6 @@ public class BluetoothChatService {
                /* try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
-
                     // Send the obtained bytes to the UI Activity
                     mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
                             .sendToTarget();
@@ -506,26 +512,16 @@ public class BluetoothChatService {
                     connectionLost();
                     break;
                 }*/
-                InputStream inputStream = null;
-                try {
-                    inputStream = mmSocket.getInputStream();
-                    ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-                    Model m = (Model) objectInputStream.readObject();
-                    Utils.savepath = m.path;
-String path = m.path;
-
-System.out.println(path);
-
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, m.image)
+                /*try {
+                    byte[] bytes = IOUtils.toByteArray(mmInStream);
+                    mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, bytes)
                             .sendToTarget();
                 } catch (IOException e) {
                     e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+                }*/
 
-                /*BufferedInputStream    bufferedInputStream = new BufferedInputStream(mmInStream);
-                Bitmap bmp =  BitmapFactory.decodeStream(bufferedInputStream);
+                BufferedInputStream    bufferedInputStream = new BufferedInputStream(mmInStream);
+                Bitmap bmp =  BitmapFactory.decodeStream(mmInStream);
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 if(bmp!=null){
@@ -541,7 +537,7 @@ System.out.println(path);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }*/
+                }
               /*  try {
                     bufferedInputStream.close();
                 } catch (IOException e) {
@@ -557,17 +553,17 @@ System.out.println(path);
          * @param buffer The bytes to write
          */
         public void write(Model buffer) {
-           /* try {
-                mmOutStream.write(buffer);
-                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer)
+           try {
+                mmOutStream.write(buffer.image);
+                mHandler.obtainMessage(Constants.MESSAGE_WRITE, -1, -1, buffer.image)
                         .sendToTarget();
                 Log.d(TAG,"Image Sent");
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Exception during write", e);
-            }*/
+            }
 
-            try {
+           /* try {
                 OutputStream outputStream = mmSocket.getOutputStream();
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
                 objectOutputStream.writeObject(buffer);
@@ -576,7 +572,7 @@ System.out.println(path);
                         .sendToTarget();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
 
             /*try {
              //   mmOutStream.write(buffer);
