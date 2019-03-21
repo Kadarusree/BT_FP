@@ -109,6 +109,7 @@ public class BluetoothChatFragment extends Fragment {
 
     ArrayList<Model> images;
 
+    private static final int SELECT_PICTURES = 37;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -236,9 +237,16 @@ public class BluetoothChatFragment extends Fragment {
                     sendMessage(message);
                 }*/
 
-                Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                /*Intent pickPhoto = new Intent(Intent.ACTION_PICK,
                         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(pickPhoto , 22);
+                startActivityForResult(pickPhoto , 22);*/
+
+
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*"); //allows any image file type. Change * to specific extension to limit it
+//**These following line is the important one!
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURES);
             }
         });
 
@@ -464,6 +472,52 @@ public class BluetoothChatFragment extends Fragment {
                         e.printStackTrace();
                     }*/
                 }
+                break;
+
+            case SELECT_PICTURES:
+
+                if(requestCode == SELECT_PICTURES) {
+                    if(resultCode == Activity.RESULT_OK) {
+                        if(data.getClipData() != null) {
+                            int count = data.getClipData().getItemCount(); //evaluate the count before the for loop --- otherwise, the count is evaluated every loop.
+                            Uri imageUri = null;
+                            for (int i = 0; i < count; i++){
+                                Bitmap bitmap = null;
+                                imageUri = data.getClipData().getItemAt(i).getUri();
+
+                                try {
+                                    bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageUri);
+                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                    if (bitmap != null) {
+                                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                        byte[] byteArray = stream.toByteArray();
+
+                                        Model m = new Model(byteArray, Utils.storagePath);
+                                        images.add(m);
+
+                                        //   mChatService.write(byteArray);
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                            Toast.makeText(getActivity(), images.size() + " Images Selected", Toast.LENGTH_LONG).show();
+
+
+
+
+
+                        }
+                            //do something with the image (save it to some directory or whatever you need to do with it here)
+
+                    } else if(data.getData() != null) {
+                        String imagePath = data.getData().getPath();
+                        //do something with the image (save it to some directory or whatever you need to do with it here)
+                    }
+                }
+
+
                 break;
             case 8:
                 // When DeviceListActivity returns with a device to connect
