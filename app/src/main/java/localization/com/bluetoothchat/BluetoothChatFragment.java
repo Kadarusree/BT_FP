@@ -48,6 +48,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -380,12 +381,26 @@ public class BluetoothChatFragment extends Fragment {
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
-                    Bitmap bmp2 = BitmapFactory.decodeByteArray(readBuf, 0, readBuf.length);
-                    // imageview.setImageBitmap(bmp);
+
+
+                    String s = new String(readBuf);
+
+                    Toast.makeText(getActivity(),s+"", Toast.LENGTH_LONG).show();
+
+
+
+                    File image =new File(s);
+
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(),bmOptions);
+                 //   Bitmap bmp2 = BitmapFactory.decodeByteArray(readBuf, 0, readBuf.length);
+                   // imageview.setImageBitmap(bmp);
                     // construct a string from the buffer
-                    String writeMessage2 = new String(readBuf);
-                    mBitmaps.add(bmp2);
-                    mConversationArrayAdapter.notifyDataSetChanged();
+
+                    //String
+                   // String writeMessage2 = new String(readBuf);
+                  mBitmaps.add(bitmap);
+                mConversationArrayAdapter.notifyDataSetChanged();
 
 
 
@@ -478,10 +493,10 @@ public class BluetoothChatFragment extends Fragment {
 
                 if(requestCode == SELECT_PICTURES) {
                     if(resultCode == Activity.RESULT_OK) {
-                        if(data.getClipData() != null) {
+                        if (data.getClipData() != null) {
                             int count = data.getClipData().getItemCount(); //evaluate the count before the for loop --- otherwise, the count is evaluated every loop.
                             Uri imageUri = null;
-                            for (int i = 0; i < count; i++){
+                            for (int i = 0; i < count; i++) {
                                 Bitmap bitmap = null;
                                 imageUri = data.getClipData().getItemAt(i).getUri();
 
@@ -505,15 +520,32 @@ public class BluetoothChatFragment extends Fragment {
                             Toast.makeText(getActivity(), images.size() + " Images Selected", Toast.LENGTH_LONG).show();
 
 
-
-
-
                         }
-                            //do something with the image (save it to some directory or whatever you need to do with it here)
-
-                    } else if(data.getData() != null) {
-                        String imagePath = data.getData().getPath();
                         //do something with the image (save it to some directory or whatever you need to do with it here)
+
+                        else if (data.getData() != null) {
+                            Uri imageUri = data.getData();
+
+                            Bitmap bitmap = null;
+
+                            try {
+                                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageUri);
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                if (bitmap != null) {
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                    byte[] byteArray = stream.toByteArray();
+
+                                    Model m = new Model(byteArray, Utils.storagePath);
+                                    images.add(m);
+
+                                    //   mChatService.write(byteArray);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            //do something with the image (save it to some directory or whatever you need to do with it here)
+                        }
                     }
                 }
 

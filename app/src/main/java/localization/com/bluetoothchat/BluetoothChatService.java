@@ -527,12 +527,19 @@ public class BluetoothChatService {
                 if(bmp!=null){
                     bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] byteArray = stream.toByteArray();
-                    mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, byteArray)
-                            .sendToTarget();
 
-                    try (FileOutputStream out = new FileOutputStream(Utils.storagePath+
-                            "/"+ System.currentTimeMillis()+".jpg")) {
-                        bmp.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
+String path = Utils.storagePath+
+        "/"+ System.currentTimeMillis()+".jpg";
+                    try{
+                        FileOutputStream
+                                   out = new FileOutputStream(path) ;
+
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+                        mHandler.obtainMessage(Constants.MESSAGE_READ, -1, -1, path.getBytes())
+                                .sendToTarget();
+
+                        // bmp is your Bitmap instance
                         // PNG is a lossless format, the compression factor (100) is ignored
                     } catch (IOException e) {
                         e.printStackTrace();
